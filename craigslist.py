@@ -2,6 +2,8 @@ from requests import get
 from bs4 import BeautifulSoup
 import pandas as pd
 import math
+from sqlalchemy import create_engine
+from credentials import shred_connection_string
 
 # Parameters
 headers = {
@@ -135,4 +137,7 @@ if __name__ == "__main__":
         portland_url_mask=portland_url_mask,
     )
 
-    print(listings_data)
+    engine = create_engine(shred_connection_string)
+    listings_data.to_sql(
+        "craigslist_adu_rent", con=engine, if_exists="append", index=False
+    )
