@@ -1,19 +1,22 @@
 from sqlalchemy import create_engine
-import pandas as pd
+from scrapers import craigslist as cl
+import credentials
 
 if __name__ == "__main__":
-    urls_to_scrape = get_list_of_all_urls_to_scrape(
-        base_url=adu_search_url, headers=headers, listings_per_page=listings_per_page
+    urls_to_scrape = cl.get_list_of_all_urls_to_scrape(
+        base_url=cl.adu_search_url,
+        headers=cl.headers,
+        listings_per_page=cl.listings_per_page,
     )
 
-    listings_data = scrape_urls(
+    listings_data = cl.scrape_urls(
         urls_to_scrape=urls_to_scrape,
-        headers=headers,
-        portland_url_slice=portland_url_slice,
-        portland_url_mask=portland_url_mask,
+        headers=cl.headers,
+        portland_url_slice=cl.portland_url_slice,
+        portland_url_mask=cl.portland_url_mask,
     )
 
-    engine = create_engine(shred_connection_string)
+    engine = create_engine(credentials.shred_connection_string)
     listings_data.to_sql(
         "craigslist_adu_rent", con=engine, if_exists="append", index=False
     )
