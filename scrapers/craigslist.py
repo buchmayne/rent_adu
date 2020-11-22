@@ -2,8 +2,6 @@ from requests import get
 from bs4 import BeautifulSoup
 import pandas as pd
 import math
-from sqlalchemy import create_engine
-from credentials import shred_connection_string
 from datetime import date
 
 # Parameters
@@ -22,8 +20,19 @@ adu_search_url = "https://portland.craigslist.org/search/apa?query=%28ADU%29-%22
 
 # Functions
 def get_page_count_of_results(search_results_soup, listings_per_page):
-    """
-    TO DO: add doc string
+    """Returns the total number of pages of search results
+
+    Parameters
+    -----------
+    search_results_soup : bs4.BeautifulSoup
+        The BeautifulSoup object of the search results
+    listings_per_page : int
+        The maximum number of results shown on a single page of results
+
+    Returns
+    -------
+    total_pages : int
+        The total number of search results pages on craigslist for the search
     """
     total_results = int(search_results_soup.find("span", class_="totalcount").text)
     total_pages = math.ceil(total_results / listings_per_page)
@@ -31,8 +40,21 @@ def get_page_count_of_results(search_results_soup, listings_per_page):
 
 
 def get_list_of_all_urls_to_scrape(base_url, headers, listings_per_page):
-    """
-    TO DO: add doc string
+    """Gets the URLs for each page of results needed to be scraped
+
+    Parameters
+    ----------
+    base_url : str
+        The URL of the first page of search results
+    headers : dict
+        The headers for the get request
+    listings_per_page : int
+        The maximum number of results shown per page of results
+
+    Returns
+    -------
+    urls_to_scrape : list
+        List containing the url for each page of results that need to be scraped
     """
     search_results = get(url=base_url, headers=headers)
     search_results_soup = BeautifulSoup(search_results.content, "html.parser")
@@ -52,8 +74,17 @@ def get_list_of_all_urls_to_scrape(base_url, headers, listings_per_page):
 
 
 def scrape_craigslist_search_result(result):
-    """
-    TO DO: Add doc string
+    """Scrape data from an individual listing
+
+    Parameters
+    ----------
+    results : bs4.Tag
+        The bs4.Tag object containing the data for an individual post
+
+    Returns:
+    out_df : pd.DataFrame (dim = 1 x 5)
+        DataFrame with one row and five columns [link, date, price, housing_info, neighborhood]
+        containing the data from the individual search result
     """
     listing_link = result.a["href"]
 
@@ -87,8 +118,26 @@ def scrape_craigslist_search_result(result):
 def get_listings_data_from_results_page(
     url, headers, portland_url_slice, portland_url_mask
 ):
-    """
-    TO DO: add doc string
+    """Scrape listings data from the results page and subset on local listings.
+    Since craigslist returns results for nearby areas it is necessary to subset
+    the data to only keep the local results. This requires a filter based on the url
+    string.
+
+    Parameters
+    ----------
+    url : str
+        URL of the page to be scraped
+    headers : dict
+        Headers for get request
+    portland_url_slice : int
+        The number of characters in the portland_url_mask to subset the url string by
+    portland_url_mask : str
+        The prefix of a string that is unique to local results only
+
+    Returns
+    ------
+    listings_data : pd.DataFrame
+        Data from the listings
     """
     search_results = get(url=url, headers=headers)
     search_results_soup = BeautifulSoup(search_results.content, "html.parser")
@@ -106,8 +155,23 @@ def get_listings_data_from_results_page(
 
 
 def scrape_urls(urls_to_scrape, headers, portland_url_slice, portland_url_mask):
-    """
-    TO DO: add doc string
+    """Scrape urls and aggregate all listings data into single dataframe
+
+    Parameters
+    ----------
+    urls_to_scrape : list
+        List of the URLs of the pages to be scraped
+    headers : dict
+        Headers for get request
+    portland_url_slice : int
+        The number of characters in the portland_url_mask to subset the url string by
+    portland_url_mask : str
+        The prefix of a string that is unique to local results only
+
+    Returns
+    ------
+    listings_data : pd.DataFrame
+        Data from the listings
     """
     all_pages_listing_results = pd.concat(
         [
@@ -123,21 +187,3 @@ def scrape_urls(urls_to_scrape, headers, portland_url_slice, portland_url_mask):
     )
 
     return all_pages_listing_results
-
-
-if __name__ == "__main__":
-    urls_to_scrape = get_list_of_all_urls_to_scrape(
-        base_url=adu_search_url, headers=headers, listings_per_page=listings_per_page
-    )
-
-    listings_data = scrape_urls(
-        urls_to_scrape=urls_to_scrape,
-        headers=headers,
-        portland_url_slice=portland_url_slice,
-        portland_url_mask=portland_url_mask,
-    )
-
-    engine = create_engine(shred_connection_string)
-    listings_data.to_sql(
-        "craigslist_adu_rent", con=engine, if_exists="append", index=False
-    )
