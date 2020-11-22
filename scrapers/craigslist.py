@@ -4,6 +4,7 @@ import pandas as pd
 import math
 from sqlalchemy import create_engine
 from credentials import shred_connection_string
+from datetime import date
 
 # Parameters
 headers = {
@@ -55,7 +56,6 @@ def scrape_craigslist_search_result(result):
     TO DO: Add doc string
     """
     listing_link = result.a["href"]
-    listing_date = result.time["datetime"]
 
     if result.find("span", class_="result-price") is not None:
         listing_price = result.find("span", class_="result-price").contents[0]
@@ -75,7 +75,7 @@ def scrape_craigslist_search_result(result):
     out_df = pd.DataFrame(
         {
             "link": [listing_link],
-            "date": [listing_date],
+            "date": [date.today().strftime("%m/%d/%y")],
             "price": [listing_price],
             "housing_info": [listing_housing],
             "neighborhood": [listing_nbhd],
