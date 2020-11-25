@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-import credentials as creds
+from credentials import connection_string
 import craigslist as cl
 
 
@@ -15,14 +15,6 @@ if __name__ == "__main__":
         headers=cl.headers,
         portland_url_slice=cl.portland_url_slice,
         portland_url_mask=cl.portland_url_mask,
-    )
-
-    connection_string = "postgres://{}:{}@{}:{}/{}".format(
-        creds.aws_user,
-        creds.aws_password,
-        creds.aws_host,
-        creds.aws_port,
-        creds.aws_database,
     )
 
     engine = create_engine(connection_string)
