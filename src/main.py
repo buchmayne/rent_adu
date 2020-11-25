@@ -18,6 +18,4 @@ if __name__ == "__main__":
     )
 
     engine = create_engine(connection_string)
-    listings_data.to_sql(
-        "craigslist_adu_rent", con=engine, if_exists="append", index=False
-    )
+    listings_data.to_sql("cl_adu_rent", con=engine, if_exists="append", index=False)
