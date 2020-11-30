@@ -4,7 +4,7 @@ import boto3
 from io import BytesIO
 
 
-if __name__ == "__main__":
+def scrapeCraigslist():
     urls_to_scrape = cl.get_list_of_all_urls_to_scrape(
         base_url=cl.adu_search_url,
         headers=cl.headers,
