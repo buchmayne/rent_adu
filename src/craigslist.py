@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import math
 from datetime import date
+from sqlalchemy import create_engine
+import boto3
+from io import BytesIO
 
 # Parameters
 headers = {
@@ -187,3 +190,32 @@ def scrape_urls(urls_to_scrape, headers, portland_url_slice, portland_url_mask):
     )
 
     return all_pages_listing_results
+
+
+def scrapeCraigslist():
+    # scrape craigslist for ADU listings
+    urls_to_scrape = get_list_of_all_urls_to_scrape(
+        base_url=adu_search_url,
+        headers=headers,
+        listings_per_page=listings_per_page,
+    )
+
+    listings_data = scrape_urls(
+        urls_to_scrape=urls_to_scrape,
+        headers=headers,
+        portland_url_slice=portland_url_slice,
+        portland_url_mask=portland_url_mask,
+    )
+
+    # get connection string to aws rds from s3 bucket
+    session = boto3.Session()
+    s3_client = session.client("s3")
+    f = BytesIO()
+    s3_client.download_fileobj(
+        "rent-adu-credentials-bucket", "connection_string.txt", f
+    )
+    connection_string = f.getvalue().decode("UTF-8")
+
+    # connect to db and write data to database
+    engine = create_engine(connection_string)
+    listings_data.to_sql("cl_adu_rent", con=engine, if_exists="append", index=False)
