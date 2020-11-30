@@ -130,3 +130,6 @@ dmypy.json
 
 # ignore my credentials file
 credentials.py
+
+# ignore the virtualenv folder
+rent_adu/
